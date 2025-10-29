@@ -41,44 +41,20 @@ pipeline {
       }
     }
 
-    stage('Login & Push to Docker Hub') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
-          script {
-            if (isUnix()) {
-              sh 'echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin'
-              sh "docker push ${FULL_TAG}"
-              sh "docker push ${LATEST_TAG}"
-              sh 'docker logout'
-            } else {
-              bat 'echo %DOCKERHUB_PASS% | docker login -u %DOCKERHUB_USER% --password-stdin'
-              bat "docker push ${FULL_TAG}"
-              bat "docker push ${LATEST_TAG}"
-              bat 'docker logout'
-            }
-          }
-        }
-      }
-    }
-
-    stage('Cleanup local images') {
+    stage('run tests') {
       steps {
         script {
           if (isUnix()) {
-            sh "docker rmi ${FULL_TAG} || true"
-            sh "docker rmi ${LATEST_TAG} || true"
+            sh "docker run --rm ${FULL_TAG} python -m unittest discover -s tests"
           } else {
-            bat "docker rmi ${FULL_TAG} || exit /b 0"
-            bat "docker rmi ${LATEST_TAG} || exit /b 0"
+            bat "docker run --rm ${FULL_TAG} python -m unittest discover -s tests"
           }
         }
       }
     }
-  }
-
   post {
-    success { echo "✅ Docker pushed: ${FULL_TAG} and ${LATEST_TAG}" }
-    failure { echo "❌ Pipeline failed — check console log" }
+    success { echo "Docker pushed: ${FULL_TAG} and ${LATEST_TAG}" }
+    failure { echo "Pipeline failed — check console log" }
     always {
       script {
         if (isUnix()) { sh "docker images | head -n 50 || true" } else { bat "docker images | more" }
