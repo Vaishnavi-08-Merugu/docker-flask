@@ -4,9 +4,7 @@ pipeline {
   environment {
     DOCKER_REGISTRY = "docker.io"
     DOCKER_REPO     = "vaishnavi873/project0:latest"   
-    IMAGE_TAG       = "${env.BUILD_NUMBER}"
-    FULL_TAG        = "${DOCKER_REPO}:${IMAGE_TAG}"
-    LATEST_TAG      = "${DOCKER_REPO}:latest"
+    
   }
 
   options {
